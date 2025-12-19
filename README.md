@@ -1,137 +1,89 @@
-
 # CloudBase
+
 ## AWS EKS Shared Cluster Infrastructure Project
 
-CloudBase is a Terraform-based academic project focused on designing and deploying a shared Kubernetes environment on AWS.  
-The project demonstrates how multiple workloads can securely coexist within a single Amazon EKS cluster using infrastructure automation and DevOps pipelines.
+CloudBase is a comprehensive academic Infrastructure as Code (IaC) project that focuses on the design, automation, and management of a shared Kubernetes platform on Amazon Web Services (AWS).  
+The project leverages Terraform and AWS DevOps services to provision a secure, scalable, and repeatable Amazon EKS environment capable of hosting multiple isolated workloads within a single cluster.
 
-
-
-## Project Overview
-
-The objective of CloudBase is to showcase cloud-native infrastructure design using Infrastructure as Code (IaC).  
-It provisions networking, compute, and CI/CD components required to operate a shared Amazon EKS cluster where workloads are logically separated using Kubernetes and AWS-native controls.
-
-This project is intended for learning and demonstration purposes and highlights best practices in AWS DevOps, Terraform automation, and Kubernetes operations.
+This repository serves as a practical demonstration of modern cloud-native infrastructure principles, DevOps automation, and Kubernetes operational patterns.
 
 ---
 
-## Technologies and Tools
+## 🎯 Project Objectives
 
-- Amazon Web Services (AWS)
-- Amazon EKS
-- Terraform
-- AWS CodePipeline, CodeBuild, and CodeCommit
-- Kubernetes
-- GitOps tooling
+The primary objectives of CloudBase are:
 
----
+- To demonstrate real-world cloud infrastructure provisioning using Terraform  
+- To design a shared Amazon EKS environment with logical workload isolation  
+- To implement automated CI/CD pipelines for infrastructure lifecycle management  
+- To apply AWS networking best practices for secure inter-service communication  
+- To gain hands-on experience with DevOps workflows and GitOps-based operations  
 
-## Repository Layout
-
-The repository is organized into modular components to support clarity and reuse:
-
-.
-
-├── bootstrap        # Backend initialization for Terraform state
-├── demo             # Sample environment configuration
-│   ├── compute      # EKS and Kubernetes-related resources
-│   │   └── k8s
-│   │       └── cfg-namespace-mgmt
-│   │           └── templates
-│   ├── network      # VPCs, subnets, and routing
-│   └── pipeline     # CI/CD pipeline definitions
-├── modules          # Reusable Terraform modules
-│   ├── codebuild
-│   ├── codecommit
-│   ├── codepipeline
-│   ├── gitops
-│   ├── iam-role
-│   ├── kms
-│   ├── s3
-│   ├── transit_gw
-│   └── vpc
-└── templates
-└── scripts
+CloudBase is intended for educational and demonstration purposes, making it suitable for coursework, labs, or capstone projects in cloud computing and DevOps domains.
 
 ---
 
-## Terraform Backend Initialization
+## 🧠 Conceptual Background
 
-CloudBase uses Amazon S3 to store Terraform state files and DynamoDB for state locking.
+Modern cloud platforms often rely on shared infrastructure models to optimize cost, simplify operations, and improve scalability.  
+In Kubernetes-based environments, this is commonly achieved by running multiple workloads within a single cluster while enforcing isolation through namespaces, IAM policies, and network controls.
 
-A helper script is provided to bootstrap these backend resources.
+CloudBase explores this architectural model by implementing:
 
-From the `bootstrap` directory, execute:
+- A **single Amazon EKS cluster** hosting multiple workloads  
+- **Logical separation** of workloads using Kubernetes constructs  
+- **Independent networking boundaries** using AWS VPCs  
+- **Automated pipelines** that control infrastructure changes  
 
-```sh
-./bootstrap.sh
+This approach reflects real-world cloud platform design while remaining approachable for academic study.
 
-This step must be completed before running Terraform in any other module.
+---
 
-⸻
+## 🧱 High-Level Architecture
 
-Deployment Workflow
+CloudBase provisions a complete AWS infrastructure stack composed of the following layers:
 
-Infrastructure components are deployed in a specific sequence to ensure dependency integrity:
-	1.	CI/CD Pipeline
-	2.	Network Resources
-	3.	Compute and EKS Resources
+### 🕸️ Networking Layer
+- Multiple Virtual Private Clouds (VPCs)
+- Public and private subnets distributed across availability zones
+- Internet Gateway and NAT Gateway for controlled outbound access
+- AWS Transit Gateway to enable secure connectivity between VPCs
 
-The pipeline layer is initialized manually. All subsequent layers are deployed automatically through AWS CodePipeline.
+### ⚙️ Compute Layer
+- Amazon EKS cluster deployed in a dedicated VPC
+- Kubernetes worker nodes running in private subnets
+- Namespace-based separation for workloads
+- Integration with GitOps tooling for workload management
 
-⸻
+### 🔄 Automation Layer
+- CI/CD pipelines built using AWS CodePipeline
+- Build and validation stages powered by AWS CodeBuild
+- Source control integration using AWS CodeCommit
+- Automated Terraform plan and apply workflows
 
-Running Terraform
+All layers are fully defined using Terraform, ensuring consistent and repeatable deployments.
 
-A wrapper script is included to standardize Terraform execution across environments.
+---
 
-Example commands for initializing and deploying the pipeline module:
+## 🛠️ Technologies and Tools
 
-./run.sh -m pipeline -env demo -region us-west-2 -tfcmd init
-./run.sh -m pipeline -env demo -region us-west-2 -tfcmd plan
-./run.sh -m pipeline -env demo -region us-west-2 -tfcmd apply
+CloudBase uses the following tools and services:
 
-Once the pipeline is active, network and compute components are deployed automatically.
+- **Amazon Web Services (AWS)** – Core cloud infrastructure  
+- **Amazon EKS** – Managed Kubernetes service  
+- **Terraform** – Infrastructure as Code automation  
+- **AWS CodePipeline** – CI/CD orchestration  
+- **AWS CodeBuild** – Build and validation execution  
+- **AWS CodeCommit** – Source code management  
+- **Kubernetes** – Container orchestration platform  
+- **GitOps Tooling** – Declarative workload synchronization  
 
-⸻
+---
 
-Provisioned AWS Resources
+## 💾 Terraform State Management
 
-After a successful deployment, the following infrastructure is created:
-	•	A centralized egress VPC with public and private subnets
-	•	A dedicated VPC hosting the Amazon EKS cluster
-	•	Separate private VPCs for isolated workloads
-	•	Transit Gateway connecting all VPCs with appropriate routing
-	•	A fully configured CI/CD pipeline for infrastructure automation
+To ensure safe collaboration and prevent state conflicts, CloudBase uses a remote Terraform backend:
 
-⸻
-
-CI/CD Pipeline Stages
-
-The CloudBase pipeline is composed of multiple stages to ensure safe and repeatable deployments:
-	•	Validation Stage
-Initializes Terraform and performs static analysis using security scanning tools.
-	•	Planning Stage
-Generates and stores Terraform execution plans for review.
-	•	Apply Stage
-Applies the approved infrastructure changes to AWS.
-	•	Destroy Stage (Optional)
-Allows manual teardown of all deployed resources when enabled.
-
-⸻
-
-Common Issues and Resolution
-
-Source Repository Checkout Failure
-
-If the pipeline fails during source checkout with an authentication-related error, the issue is typically caused by an incomplete or empty application repository.
-
-Resolution Steps
-	1.	Confirm that the application repository contains valid source code.
-	2.	Temporarily disable the deployment flag in the namespace configuration module.
-	3.	Apply the change, then re-enable the deployment flag and apply again.
-	4.	Verify resource status using Kubernetes and GitOps tooling.
-
-If issues persist, inspect pipeline logs and GitOps controller logs for additional details.
+- **Amazon S3** for storing Terraform state files  
+- **Amazon DynamoDB** for state locking and concurrency control  
 
