@@ -1,0 +1,54 @@
+{{- range $name, $tenant := .Values.tenants }}
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: "ingressdeny-other-tenants-and-allow-cluster-traffic"
+  namespace: {{ $name }}
+spec:
+  endpointSelector: {}
+  ingress:
+  - fromEndpoints:
+    - {}
+  - fromEntities:
+    - cluster
+  ingressDeny:
+  - fromEndpoints:
+    - matchExpressions:
+      - key: k8s:io.cilium.k8s.namespace.labels.purpose
+        operator: In
+        values:
+          - platform-tenant
+      - key: k8s:io.kubernetes.pod.namespace
+        operator: NotIn
+        values:
+          - {{ $name }}
+          {{- if $tenant.monitoringNamespace }}
+          - {{ $tenant.monitoringNamespace }}
+          {{- end }}
+---
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: "egressdeny-other-tenants-and-allow-all-traffic"
+  namespace: {{ $name }}
+spec:
+  endpointSelector: {}
+  egress:
+  - toEntities:
+    - all
+  egressDeny:
+  - toEndpoints:
+    - matchExpressions:
+      - key: k8s:io.cilium.k8s.namespace.labels.purpose
+        operator: In
+        values:
+          - platform-tenant
+      - key: k8s:io.kubernetes.pod.namespace
+        operator: NotIn
+        values:
+          - {{ $name }}
+          {{- if $tenant.monitoringNamespace }}
+          - {{ $tenant.monitoringNamespace }}
+          {{- end }}
+---
+{{- end }}

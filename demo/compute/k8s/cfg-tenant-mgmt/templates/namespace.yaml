@@ -1,0 +1,37 @@
+{{- range $name, $tenant := .Values.tenants }}
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ $name }}
+  labels:
+    purpose: platform-tenant
+    {{- if $tenant.monitoringNamespace }}
+    monitoringNamespace: {{ $tenant.monitoringNamespace }}
+    {{- end }}
+    {{- if $tenant.nodePool }}
+    node-pool: {{ $tenant.nodePool }}
+    {{- end }}
+    {{- if $tenant.labels }}
+    {{- $tenantLabels := $tenant.labels }}
+    {{ .Values.tenantLabels | toYaml | indent 4}}
+    {{- end }}{{/* end $tenant.labels */}}
+  annotations:
+  {{- if $tenant.annotations }}
+{{ $tenant.annotations | toYaml | indent 4 }}
+    {{- end }}{{/* end $tenant.annotations */}}
+  {{- if $tenant.contacts }}
+    {{- range $i, $val := $tenant.contacts }}
+    tenant-contact-{{ $i }}: {{ printf "[%s] %s<%s>" $val.type $val.name $val.email | quote }}
+    {{- end }} {{/* end single contact */}}
+  {{- end }} {{/* end $tenant.contacts annotation */}}
+  {{- if $tenant.data }}
+    data-classification: {{ $tenant.data.classification | default "low-risk" }}
+    data-kinds: {{ join "," $tenant.data.dataKinds | default "none" }}
+    data-description: {{ $tenant.data.description | quote | default "unknown" }}
+  {{- end }} {{/* end $tenant.data annotation */}}
+  {{- if $tenant.criticality }}
+    tenant-critical-to: {{ $tenant.criticality.criticalTo | default "none" }}
+    tenant-critical-description: {{ $tenant.criticality.description | quote | default "none" }}
+  {{- end }} {{/* $tenant.criticality annotation */}}
+---
+{{- end }} {{/* range tenants */}}

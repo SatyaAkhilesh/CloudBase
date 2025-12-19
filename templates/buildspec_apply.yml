@@ -1,0 +1,33 @@
+version: 0.2
+
+env:
+  variables:
+    CODE_SRC_DIR: "."
+    
+    # Terraform related variables
+    TF_VERSION: "1.4.6"
+    TF_MODULE_TO_BUILD: "network"
+    ENVIRONMENT: "demo"
+
+phases:
+  install:
+    runtime-versions:
+      python: 3.9
+    commands:
+      - set -e
+      # Install Terraform
+      - "echo Installing Terraform..."
+      - "curl -s -qL -o terraform.zip https://releases.hashicorp.com/terraform/${TF_VERSION}/terraform_${TF_VERSION}_linux_amd64.zip"
+      - "unzip -o terraform.zip"
+      - "mv terraform /bin"
+      - "rm terraform.zip"
+
+  build:
+    commands:
+      - set -e
+      - "echo ## TERRAFORM APPLY : Starting with the Terraform Apply"
+      - "/bin/bash ${CODEBUILD_SRC_DIR}/run.sh -m ${TF_MODULE_TO_BUILD} -e ${ENVIRONMENT} -r ${AWS_REGION} -t apply"
+
+artifacts:
+  files:
+    - '**/*'
