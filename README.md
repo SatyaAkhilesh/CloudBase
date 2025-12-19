@@ -32,6 +32,7 @@ This project is intended for learning and demonstration purposes and highlights 
 The repository is organized into modular components to support clarity and reuse:
 
 .
+
 ├── bootstrap        # Backend initialization for Terraform state
 ├── demo             # Sample environment configuration
 │   ├── compute      # EKS and Kubernetes-related resources
